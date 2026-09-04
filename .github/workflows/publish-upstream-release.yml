@@ -1,0 +1,56 @@
+# Builds the desktop installers on this repository's runners and publishes them to
+# the release in sktelecom/onot. Actions is unavailable there, so the build has to
+# happen somewhere else; the build definition is still the one in sktelecom/onot,
+# called rather than copied, so the two never drift.
+#
+# Uploading needs UPSTREAM_PUBLISH_TOKEN, a token with contents:write on
+# sktelecom/onot. Without it, leave `publish` off: the installers build and their
+# names are checked, and nothing reaches the release. A push to this branch is
+# always a rehearsal; only a workflow_dispatch with `publish` on uploads anything.
+#
+# PyPI reads this file as the workflow identity rather than the called one, so
+# publishing to PyPI from here needs its own trusted publisher on the onot project:
+# Owner haksungjang, Repository onot, Workflow publish-upstream-release.yml,
+# Environment pypi. Until that exists, the PyPI job builds the sdist and wheel and
+# stops before uploading.
+name: Publish release upstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag to build, e.g. v1.2.3 (must already exist in sktelecom/onot when publishing)"
+        required: true
+        type: string
+      publish:
+        description: "Upload the assets to the release in sktelecom/onot (off = build and verify only)"
+        required: true
+        type: boolean
+        default: false
+  push:
+    branches: [ci/publish-dry-run]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: sktelecom/onot/.github/workflows/release.yml@ci/publish-from-caller
+    permissions:
+      # A called workflow cannot ask for more than the caller grants, and the
+      # release jobs declare contents: write to upload assets and id-token: write
+      # for PyPI's OIDC exchange, so both grants have to be here.
+      contents: write
+      id-token: write
+    with:
+      owner: sktelecom
+      repo: onot
+      # A branch push has no tag to read, so name the version being rehearsed.
+      version: ${{ inputs.version || 'v1.1.2' }}
+      publish: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+    # Mapped by name rather than inherited, so only the one credential the release
+    # needs crosses over. Empty until the token is configured, which the called
+    # workflow handles by falling back to the run's own token — enough to build,
+    # not enough to upload to sktelecom/onot.
+    secrets:
+      PUBLISH_TOKEN: ${{ secrets.UPSTREAM_PUBLISH_TOKEN }}
