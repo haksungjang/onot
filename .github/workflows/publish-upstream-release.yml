@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   publish:
-    uses: sktelecom/onot/.github/workflows/release.yml@ci/publish-from-caller
+    uses: sktelecom/onot/.github/workflows/release.yml@main
     permissions:
       # A called workflow cannot ask for more than the caller grants, and the
       # release jobs declare contents: write to upload assets and id-token: write
