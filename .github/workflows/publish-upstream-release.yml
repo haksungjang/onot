@@ -8,11 +8,11 @@
 # names are checked, and nothing reaches the release. A push to this branch is
 # always a rehearsal; only a workflow_dispatch with `publish` on uploads anything.
 #
-# PyPI reads this file as the workflow identity rather than the called one, so
-# publishing to PyPI from here needs its own trusted publisher on the onot project:
-# Owner haksungjang, Repository onot, Workflow publish-upstream-release.yml,
-# Environment pypi. Until that exists, the PyPI job builds the sdist and wheel and
-# stops before uploading.
+# Trusted Publishing identifies a workflow by its entry point, so an upload from
+# here never matches the publisher registered for sktelecom/onot. PYPI_TOKEN carries
+# the upload instead, which costs the PEP 740 provenance that only a Trusted
+# Publishing upload can issue. A tag pushed to sktelecom/onot still publishes
+# token-lessly with provenance once Actions works there again.
 name: Publish release upstream
 
 on:
@@ -54,3 +54,4 @@ jobs:
     # not enough to upload to sktelecom/onot.
     secrets:
       PUBLISH_TOKEN: ${{ secrets.UPSTREAM_PUBLISH_TOKEN }}
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
