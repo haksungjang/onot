@@ -45,8 +45,10 @@ jobs:
     with:
       owner: sktelecom
       repo: onot
-      # A branch push has no tag to read, so name the version being rehearsed.
-      version: ${{ inputs.version || 'v1.1.2' }}
+      # A branch push has no tag to read, so name the version being rehearsed. The
+      # release now refuses to build a tree whose pyproject.toml declares a different
+      # version, so this has to track the version on the upstream default branch.
+      version: ${{ inputs.version || 'v1.2.0' }}
       publish: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
     # Mapped by name rather than inherited, so only the one credential the release
     # needs crosses over. Empty until the token is configured, which the called
